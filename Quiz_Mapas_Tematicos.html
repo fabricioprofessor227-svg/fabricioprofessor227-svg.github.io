@@ -321,9 +321,10 @@
     // ----- QUESTÕES DO QUIZ 2 (Mapas Temáticos) -----
     // Ordem das corretas: 1B, 2D, 3B, 4B, 5C, 6D, 7D, 8A, 9C, 10A, 11C, 12A, 13B, 14B, 15A, 16D, 17A, 18B, 19A, 20C
     const questions = [
-        { text: "A cartografia temática tem como principal objetivo:",
-          options: ["Representar apenas as divisas políticas entre países", "Representar fenômenos específicos (população, clima, economia) sobre uma base geográfica", "Criar mapas exclusivamente para navegação marítima", "Substituir completamente a cartografia geral"],
-          correct: 1, // B
+      { text: "A cartografia temática tem como principal objetivo:",
+  img: "https://i.imgur.com/VarfOma.png",
+  options: ["Representar apenas as divisas políticas entre países", "Representar fenômenos específicos (população, clima, economia) sobre uma base geográfica", "Criar mapas exclusivamente para navegação marítima", "Substituir completamente a cartografia geral"],
+  correct: 1, // B
           justification: "A cartografia temática foca na representação de fenômenos particulares, como densidade populacional, tipos de clima, produção econômica, etc., utilizando uma base geográfica de referência." },
         { text: "Analise as afirmações sobre projeções cartográficas: I. A projeção de Mercator preserva as áreas dos continentes. II. A projeção de Peters é conhecida por preservar as áreas relativas. III. Todas as projeções apresentam algum tipo de distorção. Está(ão) correta(s):",
           options: ["Apenas I", "Apenas II", "Apenas I e III", "Apenas II e III"],
@@ -404,6 +405,8 @@
     ];
 
     let studentName = "";
+    let studentTurma = "";
+    let studentBimestre = "";
     let startTime = null;
     let currentQuestion = 0;
     let answers = new Array(questions.length).fill(null);
@@ -434,12 +437,13 @@
     }
 
     function renderCurrentQuestion() {
-        const q = questions[currentQuestion];
-        const userAnswer = answers[currentQuestion];
-        
-        let html = `<div class="question-card active">`;
-        html += `<div class="question-text">${currentQuestion + 1}. ${q.text}</div>`;
-        html += `<ul class="alternatives">`;
+   const q = questions[currentQuestion];
+    const userAnswer = answers[currentQuestion];
+    
+    let html = `<div class="question-card active">`;
+    html += `<div class="question-text">${currentQuestion + 1}. ${q.text}</div>`;
+    if (q.img) html += `<div style="text-align:center; margin:15px 0"><img src="${q.img}" style="max-width:100%; border-radius:12px"></div>`;
+    html += `<ul class="alternatives">`;
         
         q.options.forEach((opt, idx) => {
             const isSelected = (userAnswer === idx);
@@ -541,15 +545,32 @@
     }
 
     function generateReportAndContinue(score, nota) {
+        // ENVIA OS DADOS PARA A PLANILHA (quando aluno clica em Gerar Relatório)
         let mensao = "";
-        if (nota >= 8.5) mensao = "Excelente (Parabéns!)";
-        else if (nota >= 7.0) mensao = "Bom (Parabéns!)";
+        if (nota >= 8.5) mensao = "Excelente";
+        else if (nota >= 7.0) mensao = "Bom";
+        
+        enviarParaPlanilha(
+            studentName,
+            studentTurma,
+            studentBimestre,
+            "Mapas Temáticos",
+            nota.toFixed(1),
+            score,
+            totalQuestions,
+            mensao,
+            attempts
+        );
+      
+        let mensaoRelatorio = "";
+        if (nota >= 8.5) mensaoRelatorio = "Excelente (Parabéns!)";
+        else if (nota >= 7.0) mensaoRelatorio = "Bom (Parabéns!)";
         
         const wrongQuestions = [];
         for (let i = 0; i < totalQuestions; i++) {
             if (answers[i] !== questions[i].correct) wrongQuestions.push(i + 1);
         }
-        
+           
         const endTime = new Date();
         const startStr = startTime ? startTime.toLocaleString() : "Não registrado";
         const endStr = endTime.toLocaleString();
@@ -639,25 +660,44 @@
 
     function showInitialScreen() {
         questionsArea.innerHTML = `
-            <div class="initial-screen">
-                <h2>📝 Identificação</h2>
-                <p>Digite seu nome para começar o quiz:</p>
-                <input type="text" id="studentNameInput" placeholder="Seu nome completo" autocomplete="off">
-                <br>
-                <button id="startQuizBtn">✨ Iniciar Quiz ✨</button>
-            </div>
+           <div class="initial-screen">
+    <h2>📝 Identificação</h2>
+    <p>Digite seu nome para começar o quiz:</p>
+    <input type="text" id="studentNameInput" placeholder="Seu nome completo" autocomplete="off">
+    
+    <p style="margin-top: 15px;">Turma:</p>
+    <input type="text" id="turmaInput" placeholder="Ex: 301" autocomplete="off">
+    
+    <p style="margin-top: 15px;">Bimestre:</p>
+    <select id="bimestreSelect">
+        <option value="1º Bimestre">1º Bimestre</option>
+        <option value="2º Bimestre">2º Bimestre</option>
+        <option value="3º Bimestre">3º Bimestre</option>
+        <option value="4º Bimestre">4º Bimestre</option>
+    </select>
+    
+    <br><br>
+    <button id="startQuizBtn">✨ Iniciar Quiz ✨</button>
+</div>
+
         `;
         navContainer.innerHTML = '';
-        document.getElementById('startQuizBtn')?.addEventListener('click', () => {
-            const nameInput = document.getElementById('studentNameInput');
-            if (nameInput && nameInput.value.trim() !== "") {
-                studentName = nameInput.value.trim();
-                startTime = new Date();
-                startQuiz();
-            } else {
-                alert("Por favor, digite seu nome para continuar.");
-            }
-        });
+     document.getElementById('startQuizBtn')?.addEventListener('click', () => {
+    const nameInput = document.getElementById('studentNameInput');
+    const turmaInput = document.getElementById('turmaInput');
+    const bimestreSelect = document.getElementById('bimestreSelect');
+    
+    if (nameInput && nameInput.value.trim() !== "") {
+        studentName = nameInput.value.trim();
+        studentTurma = turmaInput ? turmaInput.value.trim() : "";
+        studentBimestre = bimestreSelect ? bimestreSelect.value : "1º Bimestre";
+        
+        startTime = new Date();
+        startQuiz();
+    } else {
+        alert("Por favor, digite seu nome para continuar.");
+    }
+});
     }
 
     showInitialScreen();
@@ -682,6 +722,40 @@
         }
     });
 
+    // Função para enviar dados para a planilha do Google
+    async function enviarParaPlanilha(nome, turma, bimestre, quizNome, nota, acertos, total, mensao, tentativa) {
+        // ⚠️ COLOQUE A SUA URL DO WEB APP AQUI ⚠️
+        const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwFfyHxWFl4AB2e7N2gum4TDjpF9rAJ-hKz40_E4EskDH48JsmXtW98AGWNVvoY4BGTew/exec";
+        
+        const dados = {
+            nome: nome,
+            turma: turma,
+            bimestre: bimestre,
+            quiz: quizNome,
+            nota: nota,
+            acertos: acertos,
+            total: total,
+            mensao: mensao,
+            tentativa: tentativa
+        };
+        
+        try {
+            const response = await fetch(URL_WEB_APP, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dados)
+            });
+            console.log("Dados enviados com sucesso para a planilha!");
+        } catch (erro) {
+            console.error("Erro ao enviar para planilha:", erro);
+        }
+    }
+
 </script>
 </body>
 </html>
+
+
